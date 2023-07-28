@@ -13,7 +13,9 @@ def start_message(message):
     #Проверка на наличие юзера в бд
     check_user = db.checker(user_id)
     if check_user:
+        products = db.get_pr_name_id()
         bot.send_message(user_id, 'Добро пожаловать!', reply_markup=bt.remove())
+        bot.send_message(user_id, 'Выберите пункт меню', reply_markup=bt.main_menu_buttons(products))
     else:
         bot.send_message(user_id, 'Приветствую вас! Начнем регистрацию, напишите свое имя', reply_markup=bt.remove())
         #Переход на этап получения имени
@@ -49,6 +51,8 @@ def get_loc(message, user_name, user_num):
         db.register(user_id, user_name, user_num, user_loc)
         #Перевод на главное меню
         bot.send_message(user_id, 'Вы успешно зарегистрировались!')
+        products = db.get_pr_name_id()
+        bot.send_message(user_id, 'Выберите пункт меню', reply_markup=bt.main_menu_buttons(products))
     #Если не нажал кнопку
     else:
         bot.send_message(user_id, 'Отправьте локацию через кнопку!')
