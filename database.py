@@ -68,13 +68,13 @@ def show_all_products():
 
 #Вывод id продуктов
 def get_pr_name_id():
-    products = sql.execute('SELECT id, pr_name, pr_amount FROM products;').fetchall()
+    products = sql.execute('SELECT id, pr_name, pr_amount, pr_price FROM products;').fetchall()
 
     return products
 
 def get_pr_id():
     prods = sql.execute('SELECT pr_name, id, pr_amount FROM products;').fetchall()
-    sorted_prods = [i[0] for i in prods if i[2] > 0]
+    sorted_prods = [i[1] for i in prods if i[2] > 0]
     return sorted_prods
 
 ##Методы для корзины##
