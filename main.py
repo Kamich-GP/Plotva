@@ -7,6 +7,9 @@ bot = telebot.TeleBot('')
 geolocator = Nominatim(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36')
 #Временные данные
 users = {}
+#Языки
+ru = {'start': 'Добро пожаловать'}
+uz = {'start': 'Xush kelibsiz'}
 #Обработчик команды /start
 @bot.message_handler(commands=['start'])
 def start_message(message):
@@ -15,14 +18,18 @@ def start_message(message):
     #Проверка на наличие юзера в бд
     check_user = db.checker(user_id)
     if check_user:
-        products = db.get_pr_name_id()
-        bot.send_message(user_id, 'Добро пожаловать!', reply_markup=remove())
-        bot.send_message(user_id, 'Выберите пункт меню', reply_markup=bt.main_menu_buttons(products))
+        bot.send_message(user_id, 'Выберите язык', reply_markup=remove())
+        bot.register_next_step_handler(message, language)
     else:
         bot.send_message(user_id, 'Приветствую вас! Начнем регистрацию, напишите свое имя', reply_markup=remove())
         #Переход на этап получения имени
         bot.register_next_step_handler(message, get_name)
-
+def language(message):
+    products = db.get_pr_name_id()
+    if message.text == 'ru':
+        bot.send_message(user_id, ru['start'], reply_markup=bt.main_menu_buttons(products))
+    elif message.text == 'uzb':
+        bot.send_message(user_id, uz['start'], reply_markup=bt.main_menu_buttons(products))
 #Этап получения имени
 def get_name(message):
     user_name = message.text
@@ -91,7 +98,7 @@ def cart_handle(call):
         bot.edit_message_text('Корзина очищена! Желаете что-то еще?', chat_id=chat_id,
                               message_id=message_id, reply_markup=bt.main_menu_buttons(products))
     elif call.data == 'order':
-        bot.send_message(791555605, 'Новый заказ!')
+        bot.send_message(tg_id, 'Новый заказ!')
         db.del_cart(user_id)
         bot.edit_message_text('Заказ был оформлен и скоро будет доставлен! Желаете заказать что-то еще?',
                               chat_id=chat_id, message_id=message_id,
@@ -102,7 +109,8 @@ def cart_handle(call):
                               reply_markup=bt.main_menu_buttons(products))
     elif call.data == 'cart':
         text = db.show_cart(user_id)
-        bot.edit_message_text(f'Корзина:\n{text[0]}', chat_id=chat_id, message_id=message_id,
+        bot.edit_message_text(f'Корзина:\nТовар: {text[0]}\nКоличество: {text[1]}\nИтого: {text[2]}',
+                              chat_id=chat_id, message_id=message_id,
                               reply_markup=bt.cart_buttons())
 
 #Этап получения локации
