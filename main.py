@@ -45,6 +45,7 @@ def get_num(message, user_name):
         bot.send_message(user_id, 'Отправьте свой контакт через кнопку!')
         bot.register_next_step_handler(message, get_num, user_name)
 
+
 #Функция выбора количества товара
 @bot.callback_query_handler(lambda call: call.data in ['back', 'to_cart', 'increment', 'decrement'])
 def get_user_count(call):
@@ -78,30 +79,6 @@ def get_user_count(call):
         bot.edit_message_text('Ваш товар был добавлен в корзину! Хотите заказать что-то еще?',
                               chat_id=chat_id, message_id=call.message.message_id,
                               reply_markup=bt.main_menu_buttons(products))
-
-
-@bot.callback_query_handler(lambda call: call.data in ['cart', 'clear', 'order', 'back'])
-def cart_handler(call):
-    user = call.message.chat.id
-    message_id = call.message.message_id
-    products = db.get_pr_name_id()
-
-    if call.data == 'clear':
-        db.del_cart(user)
-        bot.edit_message_text('Корзина очищена!',
-                              user, message_id, reply_markup=bt.main_menu_buttons(products))
-    elif call.data == 'order':
-        db.del_cart(user)
-        bot.send_message(791555605, 'Новый заказ!')
-        bot.edit_message_text('Заказ оформлен! Желаете что-то еще?', user, message_id,
-                              reply_markup=bt.main_menu_buttons(products))
-    elif call.data == 'back':
-        bot.edit_message_text('Выберите пункт меню:', user,
-                              message_id,
-                              reply_markup=bt.main_menu_buttons(products))
-    elif call.data == 'cart':
-        bot.edit_message_text('Корзина', user, message_id,
-                              reply_markup=bt.cart_buttons())
 
 
 #Этап получения локации
