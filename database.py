@@ -72,9 +72,13 @@ def get_pr_name_id():
 
     return products
 
+#Получить имя продукта
+def get_pr_name(id):
+    product = sql.execute('SELECT pr_name FROM products WHERE id=?', (id,))
+    return product.fetchone()
 def get_pr_id():
-    prods = sql.execute('SELECT pr_name, id, pr_amount FROM products;').fetchall()
-    sorted_prods = [i[1] for i in prods if i[2] > 0]
+    prods = sql.execute('SELECT id, pr_name, pr_amount FROM products;').fetchall()
+    sorted_prods = [i[0] for i in prods if i[2] > 0]
     return sorted_prods
 
 ##Методы для корзины##
@@ -85,7 +89,7 @@ def add_to_cart(user_id, pr_name, pr_quantity, user_total=0):
     # Фиксируем изменения
     connection.commit()
     amount = sql.execute('SELECT pr_amount FROM products WHERE pr_name=?;', (pr_name,)).fetchone()
-    sql.execute(f'UPDATE products SET pr_amount={amount[0] - pr_quantity}'
+    sql.execute(f'UPDATE products SET pr_amount={amount[0] - pr_quantity} '
                 f'WHERE pr_name=?;', (pr_name,))
     #Фиксируем изменения
     connection.commit()
@@ -93,10 +97,9 @@ def add_to_cart(user_id, pr_name, pr_quantity, user_total=0):
 #Очистка корзины
 def del_cart(user_id):
     pr_name = sql.execute('SELECT user_product FROM cart WHERE user_id=?;', (user_id,)).fetchone()
-    amount = sql.execute('SELECT pr_amount FROM products WHERE pr_name=?;', (pr_name,)).fetchone()
-    pr_quantity = sql.execute('SELECT product_quantity FROM cart WHERE user_id=?;', (user_id,)).fetchone()
-    sql.execute(f'UPDATE products SET pr_amount={amount[0] + pr_quantity}'
-                f'WHERE pr_name=?;', (pr_name,))
+    amount = sql.execute('SELECT pr_amount FROM products WHERE pr_name=?;', (pr_name[0],)).fetchone()[0]
+    pr_quantity = sql.execute('SELECT product_quantity FROM cart WHERE user_id=?;', (user_id,)).fetchone()[0]
+    sql.execute(f'UPDATE products SET pr_amount={amount + pr_quantity} WHERE pr_name=?;', (pr_name,))
     # Фиксируем изменения
     connection.commit()
     sql.execute('DELETE FROM cart WHERE user_id=?;', (user_id,))
@@ -105,7 +108,5 @@ def del_cart(user_id):
 
 #Отображение корзины
 def show_cart(user_id):
-    cart = sql.execute('SELECT user_product, product_quantity, total'
-                'FROM cart WHERE user_id=?;', (user_id,))
+    cart = sql.execute('SELECT user_product, product_quantity, total FROM cart WHERE user_id=?;', (user_id,))
     return cart.fetchone()
-

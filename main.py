@@ -3,7 +3,7 @@ from telebot.types import ReplyKeyboardRemove as remove
 from geopy import Nominatim
 
 #Подключение к боту
-bot = telebot.TeleBot('6618128660:AAEeH5e4x1rVNqpntvGbyzLW7Tj3w-lRpac')
+bot = telebot.TeleBot('')
 geolocator = Nominatim(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36')
 #Временные данные
 users = {}
@@ -16,7 +16,6 @@ def start_message(message):
     check_user = db.checker(user_id)
     if check_user:
         products = db.get_pr_name_id()
-        print(products)
         bot.send_message(user_id, 'Добро пожаловать!', reply_markup=remove())
         bot.send_message(user_id, 'Выберите пункт меню', reply_markup=bt.main_menu_buttons(products))
     else:
@@ -72,14 +71,39 @@ def get_user_count(call):
     elif call.data == 'to_cart':
         products = db.get_pr_name_id()
         product_count = users[chat_id]['pr_amount']
-        user_total = products[3] * product_count
-        user_product = users[chat_id]['pr_name']
+        user_total = products[0][3] * product_count
+        user_product = db.get_pr_name(users[chat_id]['pr_name'])
 
-        db.add_to_cart(chat_id, user_product, product_count, user_total)
+        db.add_to_cart(chat_id, user_product[0], product_count, user_total)
         bot.edit_message_text('Ваш товар был добавлен в корзину! Хотите заказать что-то еще?',
                               chat_id=chat_id, message_id=call.message.message_id,
                               reply_markup=bt.main_menu_buttons(products))
 
+#Корзина
+@bot.callback_query_handler(lambda call: call.data in ['cart', 'order', 'clear', 'back'])
+def cart_handle(call):
+    chat_id = call.message.chat.id
+    message_id = call.message.message_id
+    products = db.get_pr_name_id()
+
+    if call.data == 'clear':
+        db.del_cart(user_id)
+        bot.edit_message_text('Корзина очищена! Желаете что-то еще?', chat_id=chat_id,
+                              message_id=message_id, reply_markup=bt.main_menu_buttons(products))
+    elif call.data == 'order':
+        bot.send_message(791555605, 'Новый заказ!')
+        db.del_cart(user_id)
+        bot.edit_message_text('Заказ был оформлен и скоро будет доставлен! Желаете заказать что-то еще?',
+                              chat_id=chat_id, message_id=message_id,
+                              reply_markup=bt.main_menu_buttons(products))
+    elif call.data == 'back':
+        bot.edit_message_text('Выберите пункт меню:', chat_id=chat_id,
+                              message_id=call.message.message_id,
+                              reply_markup=bt.main_menu_buttons(products))
+    elif call.data == 'cart':
+        text = db.show_cart(user_id)
+        bot.edit_message_text(f'Корзина:\n{text[0]}', chat_id=chat_id, message_id=message_id,
+                              reply_markup=bt.cart_buttons())
 
 #Этап получения локации
 def get_loc(message, user_name, user_num):
@@ -101,7 +125,7 @@ def get_loc(message, user_name, user_num):
 @bot.callback_query_handler(lambda call: int(call.data) in db.get_pr_id())
 def get_user_product(call):
     chat_id = call.message.chat.id
-    users[chat_id] = {'pr_name': call.data, 'pr_count': 1}
+    users[user_id] = {'pr_name': call.data, 'pr_amount': 1}
     message_id = call.message.message_id
 
     bot.edit_message_text('Выберите количество', chat_id=chat_id, message_id=message_id,

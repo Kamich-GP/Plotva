@@ -25,7 +25,7 @@ def loc_button():
 #Кнопки для вывода товаров
 def main_menu_buttons(products_from_db):
     #Создаем пространство для кнопок
-    kb = types.InlineKeyboardMarkup(row_width=2)
+    kb = types.InlineKeyboardMarkup(row_width=1)
     #Создаем несгораемые кнопки
     cart = types.InlineKeyboardButton(text='Корзина', callback_data='cart')
     #Создаем кнопки с продуктами
@@ -33,15 +33,15 @@ def main_menu_buttons(products_from_db):
                                                callback_data=f'{i[0]}')
                     for i in products_from_db]
     #Добавляем кнопки в пространство
-    kb.row(cart)
     kb.add(*all_products)
+    kb.row(cart)
 
     return kb
 
 #Кнопки для выбора количества товара
 def choose_product_count(amount=1, plus_or_minus=''):
     #Создаем пространство для кнопок
-    kb = types.InlineKeyboardMarkup(row_width=2)
+    kb = types.InlineKeyboardMarkup(row_width=3)
 
     #Создаем сами кнопки
     back = types.InlineKeyboardButton(text='Назад', callback_data='back')
